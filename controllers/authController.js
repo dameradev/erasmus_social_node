@@ -59,11 +59,50 @@ exports.postLogin = async (req, res, next) => {
       "somesupersecretsecret",
       { expiresIn: "1h" }
     );
-    res.status(200).json({ token, userId: user._id.toString() });
+
+    res
+      .status(200)
+      .json({ token, userId: user._id.toString(), expiresIn: 3600 });
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
     }
     next(err);
   }
+};
+
+exports.suggestedUsers = async (req, res, next) => {
+  const users = await User.find();
+  res.status(200).json({ users });
+};
+
+exports.addFriend = async (req, res, next) => {
+  const userId = req.body.userId;
+  const currentUserId = req.body.currentUserId;
+
+  console.log(req.body);
+  const currentUser = await User.findById(currentUserId.toString());
+  const friendRequestUser = await User.findById(userId.toString());
+  const friendIndex = currentUser.friends.findIndex(user => {
+    return user.toString() === userId.toString();
+  });
+
+  if (friendIndex === -1) {
+    currentUser.friends.push(userId);
+    currentUser.save();
+  }
+
+  const friendRequestIndex = friendRequestUser.friendRequests.findIndex(
+    user => {
+      return user.toString() === currentUserId.toString();
+    }
+  );
+  console.log(friendRequestIndex);
+
+  if (friendRequestIndex === -1) {
+    friendRequestUser.friendRequests.push(currentUserId);
+    friendRequestUser.save();
+  }
+
+  // console.log(currentUser, userId);
 };

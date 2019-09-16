@@ -9,7 +9,9 @@ const userSchema = new Schema({
   password: {
     type: String,
     required: true
-  }
+  },
+  friends: [{ type: mongoose.Types.ObjectId }],
+  friendRequests: [{ type: mongoose.Types.ObjectId }]
 });
 
 const user = mongoose.model("User", userSchema);
