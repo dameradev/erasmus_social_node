@@ -71,6 +71,15 @@ exports.postLogin = async (req, res, next) => {
   }
 };
 
+exports.getUser = async (req, res, next) => {
+  // console.log(req.params.);
+  const user = await User.findById(req.params.userId).populate(
+    "friendRequests",
+    "email"
+  );
+  res.status(200).json({ user });
+};
+
 exports.suggestedUsers = async (req, res, next) => {
   const users = await User.find();
   res.status(200).json({ users });
@@ -80,7 +89,6 @@ exports.addFriend = async (req, res, next) => {
   const userId = req.body.userId;
   const currentUserId = req.body.currentUserId;
 
-  console.log(req.body);
   const currentUser = await User.findById(currentUserId.toString());
   const friendRequestUser = await User.findById(userId.toString());
   const friendIndex = currentUser.friends.findIndex(user => {
@@ -97,12 +105,23 @@ exports.addFriend = async (req, res, next) => {
       return user.toString() === currentUserId.toString();
     }
   );
-  console.log(friendRequestIndex);
 
   if (friendRequestIndex === -1) {
     friendRequestUser.friendRequests.push(currentUserId);
     friendRequestUser.save();
   }
+};
 
-  // console.log(currentUser, userId);
+exports.acceptRequest = async (req, res, next) => {
+  const currentUser = await User.findById(req.body.currentUserId);
+  console.log(currentUser.email);
+  currentUser.friends.push(req.body.id);
+  const userToAddIndex = currentUser.friendRequests.findIndex(id => {
+    return id.toString() === req.body.id.toString();
+  });
+  console.log(userToAddIndex);
+  currentUser.friendRequests.splice(userToAddIndex, 1);
+
+  await currentUser.save();
+  console.log(currentUser);
 };
