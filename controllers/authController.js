@@ -110,18 +110,24 @@ exports.addFriend = async (req, res, next) => {
     friendRequestUser.friendRequests.push(currentUserId);
     friendRequestUser.save();
   }
+  res.status(200).json(userId);
 };
 
 exports.acceptRequest = async (req, res, next) => {
-  const currentUser = await User.findById(req.body.currentUserId);
-  console.log(currentUser.email);
+  const currentUser = await User.findById(req.body.currentUserId).populate(
+    "friendRequests",
+    "email"
+  );
+
   currentUser.friends.push(req.body.id);
   const userToAddIndex = currentUser.friendRequests.findIndex(id => {
     return id.toString() === req.body.id.toString();
   });
-  console.log(userToAddIndex);
+
   currentUser.friendRequests.splice(userToAddIndex, 1);
 
   await currentUser.save();
-  console.log(currentUser);
+  res
+    .status(200)
+    .json({ userToAddId: req.body.id, currentUserId: req.body.currentUserId });
 };
